@@ -3,9 +3,10 @@ import jwt from "jsonwebtoken";
 import { pool } from "../../db";
 import type { IUser } from "./auth.interface";
 import config from "../../config";
+import generateToken from "../../utility/generateToken";
 
 const signupUserIntoDB = async (payload: IUser) => {
-    const {name, email, password, role} = payload;
+    const { name, email, password, role } = payload;
 
     const hashPassword = await bcrypt.hash(password, 10);
 
@@ -21,13 +22,13 @@ const logInUserIntoDB = async (payload: {
     email: string;
     password: string;
 }) => {
-    const {email, password} = payload;
+    const { email, password } = payload;
 
     const userData = await pool.query(
-        `SELECT * FROM users WHERE email=$1`,[email],
+        `SELECT * FROM users WHERE email=$1`, [email],
     );
 
-    if(userData.rows.length === 0) {
+    if (userData.rows.length === 0) {
         throw new Error("Invalid Credentials.");
     }
 
@@ -35,21 +36,27 @@ const logInUserIntoDB = async (payload: {
 
     const isPasswordMatched = await bcrypt.compare(password, user.password);
 
-    if(!isPasswordMatched){
+    if (!isPasswordMatched) {
         throw new Error("Invalid Credentials.")
     }
 
-    const token = jwt.sign(
-        {
-            id: user.id,
-            name: user.name,
-            role: user.role,
-        },
-        config.secret as string,
-        {
-            expiresIn: '1d',
-        }
-    );
+    // const token = jwt.sign(
+    //     {
+    //         id: user.id,
+    //         name: user.name,
+    //         role: user.role,
+    //     },
+    //     config.secret as string,
+    //     {
+    //         expiresIn: '1d',
+    //     }
+    // );
+
+    const token = generateToken({
+        id: user.id,
+        name: user.name,
+        role: user.role,
+    });
 
     const { password: userPassword, ...userWithoutPassword } = user;
 
