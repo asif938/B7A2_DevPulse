@@ -1,5 +1,6 @@
+import { StatusCodes } from "http-status-codes";
 import { pool } from "../../db";
-import type { IIssue, IReporter } from "./issues.interface";
+import type { IIssue, IReporter, IUpdateIssue } from "./issues.interface";
 
 const createIssueIntoDB = async (payload: IIssue, reporter_id: number) => {
     const { title, description, type } = payload;
@@ -136,7 +137,7 @@ const getSingleIssuesFromDB = async (id: string) => {
 
     const issueData = result.rows[0];
 
-    if(result.rows.length === 0){
+    if (result.rows.length === 0) {
         throw new Error("Issues not found");
     }
 
@@ -161,8 +162,112 @@ const getSingleIssuesFromDB = async (id: string) => {
     };
 }
 
+const updateIssueIntoDB = async (
+    id: string,
+    payload: IUpdateIssue,
+    user: {
+        id: number;
+        role: string;
+    }
+) => {
+    const issueResult = await pool.query(
+        `
+        SELECT *
+        FROM issues
+        WHERE id = $1
+        `,
+        [id]
+    );
+
+    if (issueResult.rows.length === 0) {
+        throw new Error("Issue not found");
+    }
+
+    const issue = issueResult.rows[0];
+
+    if (user.role === "contributor") {
+        if (issue.reporter_id !== user.id) {
+            throw new Error(
+                "You can only update your own issue"
+            );
+
+        }
+
+        if (issue.status !== "open") {
+            throw new Error(
+                "You cannot update in progress or resolved issues"
+            );
+        }
+
+        if (payload.status) {
+            throw new Error(
+                "Contributors cannot change status"
+            );
+        }
+    }
+
+
+    const result = await pool.query(
+        `
+        UPDATE issues
+        SET
+            title = COALESCE($1, title),
+            description = COALESCE(
+                $2,
+                description
+            ),
+            type = COALESCE($3, type),
+            status = COALESCE($4, status),
+            updated_at = NOW()
+        WHERE id = $5
+        RETURNING *
+        `,
+        [
+            payload.title || null,
+            payload.description || null,
+            payload.type || null,
+            user.role === "maintainer"
+                ? payload.status || null
+                : null,
+            id,
+        ]
+    );
+    return result.rows[0];
+};
+
+const deleteIssueFromDB = async (
+    id: string
+) => {
+    const issueResult = await pool.query(
+        `
+        SELECT *
+        FROM issues
+        WHERE id = $1
+        `,
+        [id]
+    );
+
+    if (issueResult.rows.length === 0) {
+        throw new Error(
+            "Issue not found"
+        );
+
+    }
+
+    await pool.query(
+        `
+        DELETE FROM issues
+        WHERE id = $1
+        `,
+        [id]
+    );
+
+};
+
 export const issueService = {
     createIssueIntoDB,
     getAllIssuesFromDB,
-    getSingleIssuesFromDB
+    getSingleIssuesFromDB,
+    updateIssueIntoDB,
+    deleteIssueFromDB
 }

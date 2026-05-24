@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from "express";
 import { issueService } from "./issues.service";
 import sendResponse from "../../utility/sendResponse";
 import { StatusCodes } from "http-status-codes";
+import { parseArgs } from "node:util";
 
 const createIssue = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -18,11 +19,11 @@ const createIssue = async (req: Request, res: Response, next: NextFunction) => {
     }
 }
 
-const getAllIssues = async (req: Request, res: Response,next: NextFunction) => {
+const getAllIssues = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const result = await issueService.getAllIssuesFromDB(
-                req.query as Record<string, string>
-            );
+            req.query as Record<string, string>
+        );
 
         return sendResponse(res, {
             statusCode: StatusCodes.OK,
@@ -37,9 +38,9 @@ const getAllIssues = async (req: Request, res: Response,next: NextFunction) => {
 
 };
 
-const getSingleIssue = async( req: Request, res: Response, next: NextFunction) => {
-    const {id} = req.params;
-    
+const getSingleIssue = async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params;
+
     try {
         const result = await issueService.getSingleIssuesFromDB(id as string);
         // if(result.rows.length === 0){
@@ -57,8 +58,28 @@ const getSingleIssue = async( req: Request, res: Response, next: NextFunction) =
     }
 }
 
+const updateIssue = async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params;
+
+    try {
+        const result = await issueService.updateIssueIntoDB(id as string, req.body, {
+            id: req.user!.id,
+            role: req.user!.role,
+        })
+        sendResponse(res, {
+            statusCode: StatusCodes.OK,
+            success: true,
+            message: "Issue updated successfully",
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
 export const issuesController = {
     createIssue,
     getAllIssues,
     getSingleIssue,
+    updateIssue,
 }
