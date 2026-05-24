@@ -3,3 +3,8 @@ export interface IIssue {
     description: string;
     type: "bug" | "feature_request";
 }
+export interface IReporter {
+    id: number;
+    name: string;
+    role: string;
+}
