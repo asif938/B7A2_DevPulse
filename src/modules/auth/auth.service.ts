@@ -40,18 +40,6 @@ const logInUserIntoDB = async (payload: {
         throw new Error("Invalid Credentials.")
     }
 
-    // const token = jwt.sign(
-    //     {
-    //         id: user.id,
-    //         name: user.name,
-    //         role: user.role,
-    //     },
-    //     config.secret as string,
-    //     {
-    //         expiresIn: '1d',
-    //     }
-    // );
-
     const token = generateToken({
         id: user.id,
         name: user.name,

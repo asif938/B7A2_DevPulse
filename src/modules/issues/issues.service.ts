@@ -39,7 +39,6 @@ const getAllIssuesFromDB = async (
         conditions.push(
             `type = $${values.length}`
         );
-
     }
 
     if (status) {
@@ -47,14 +46,12 @@ const getAllIssuesFromDB = async (
         conditions.push(
             `status = $${values.length}`
         );
-
     }
 
     if (conditions.length > 0) {
         sqlQuery += `
             WHERE ${conditions.join(" AND ")}
         `;
-
     }
 
     sqlQuery += `
@@ -67,11 +64,14 @@ const getAllIssuesFromDB = async (
         sqlQuery += ` DESC`;
     }
 
-
     const issuesResult = await pool.query(
         sqlQuery,
         values
     );
+
+    if (issuesResult.rows.length === 0) {
+        throw new Error("Issues not found");
+    }
 
     const issues = issuesResult.rows;
 
@@ -83,7 +83,6 @@ const getAllIssuesFromDB = async (
         )
     ];
 
-    // let reporters: any[] = [];
     let reporters: IReporter[] = [];
 
     if (reporterIds.length > 0) {
@@ -206,16 +205,12 @@ const updateIssueIntoDB = async (
         }
     }
 
-
     const result = await pool.query(
         `
         UPDATE issues
         SET
             title = COALESCE($1, title),
-            description = COALESCE(
-                $2,
-                description
-            ),
+            description = COALESCE($2, description),
             type = COALESCE($3, type),
             status = COALESCE($4, status),
             updated_at = NOW()

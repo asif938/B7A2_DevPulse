@@ -3,7 +3,7 @@ import { authService } from "./auth.service";
 import sendResponse from "../../utility/sendResponse";
 import { StatusCodes } from "http-status-codes";
 
-const signUpUser = async (req: Request, res: Response) => {
+const signUpUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const result = await authService.signupUserIntoDB(req.body);
         sendResponse(res, {
@@ -12,13 +12,8 @@ const signUpUser = async (req: Request, res: Response) => {
             message: "User registered successfully",
             data: result,
         });
-    } catch (error: any) {
-        sendResponse(res, {
-            statusCode: 500,
-            success: false,
-            message: error.message,
-            error: error,
-        });
+    } catch (error) {
+        next(error);
     }
 }
 

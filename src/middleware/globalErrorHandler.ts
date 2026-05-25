@@ -1,18 +1,32 @@
-import type { NextFunction, Request, Response } from "express";
+import type {
+    NextFunction,
+    Request,
+    Response,
+} from "express";
+
+import { StatusCodes } from "http-status-codes";
 
 const globalErrorHandler = (
-  err: any,
-  req: Request,
-  res: Response,
-  next: NextFunction,
+    err: unknown,
+    req: Request,
+    res: Response,
+    next: NextFunction,
 ) => {
-  //   console.error(err.stack);
 
-  res.status(500).json({
-    success: false,
-    message: err.message || "Internal Server Error",
-    errors: err.errors || [],
-  });
+    let statusCode = StatusCodes.INTERNAL_SERVER_ERROR;
+    let message = "Internal Server Error";
+    let errors: unknown = [];
+
+    if (err instanceof Error) {
+        message = err.message;
+    }
+
+    res.status(statusCode).json({
+        success: false,
+        message,
+        errors,
+    });
+
 };
 
 export default globalErrorHandler;
