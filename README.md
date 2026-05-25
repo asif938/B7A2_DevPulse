@@ -11,7 +11,7 @@ Built with **Node.js**, **TypeScript**, **Express.js**, **PostgreSQL**, raw SQL,
 | | |
 |---|---|
 | **GitHub Repo** | https://github.com/asif938/B7A2_DevPulse |
-| **Live Deployment** | https://express-assignment-nine.vercel.app/ |
+| **Live Deployment** | https://dev-pulse-nu-ivory.vercel.app/ |
 
 ---
 
